@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cloud URL Shortener</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#e6f7ff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:#fff;padding:24px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.08);width:360px;text-align:center}
+    input{width:100%;padding:10px;margin:12px 0;border:1px solid #ddd;border-radius:6px}
+    button{background:#0070f3;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer}
+    .result{margin-top:12px;word-break:break-all}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Cloud URL Shortener</h2>
+    <input id="longUrl" placeholder="https://example.com" />
+    <button id="shortenBtn">Shorten</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById("shortenBtn").addEventListener("click", async () => {
+      const longUrl = document.getElementById("longUrl").value.trim();
+      const resultDiv = document.getElementById("result");
+      if (!longUrl) { resultDiv.textContent = "Enter a URL"; return; }
+      resultDiv.textContent = "Shortening...";
+      try {
+        const res = await fetch("/api/shorten", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ longUrl })
+        });
+        const data = await res.json();
+        if (data.shortUrl) {
+          resultDiv.innerHTML = `Short URL: <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a>`;
+        } else {
+          resultDiv.textContent = "Failed to shorten: " + (data.error || JSON.stringify(data));
+        }
+      } catch (err) {
+        resultDiv.textContent = "Error: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
