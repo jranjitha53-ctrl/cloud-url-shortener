@@ -9,7 +9,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import Url from "../models/urlModels.js";
 
-dotenv.config();
+dotenv.config(); // Load .env
 
 const app = express();
 
@@ -17,18 +17,32 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static frontend if present
+// Serve static frontend
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "../public")));
 
-// Connect to MongoDB Atlas
+// -------------------------
+// ⭐ DEBUG ENV ROUTE (IMPORTANT)
+// -------------------------
+app.get("/api/debug-env", (req, res) => {
+  res.json({
+    mongoUriExists: !!process.env.MONGO_URI,
+    value: process.env.MONGO_URI ? "Loaded" : "NOT LOADED",
+  });
+});
+
+// -------------------------
+// 🌎 CONNECT TO MONGODB
+// -------------------------
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected Successfully"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err.message));
 
-// Home route
+// -------------------------
+// 🏠 HOME ROUTE
+// -------------------------
 app.get("/", (req, res) => {
   res.send(`
     <h2>Welcome to the Cloud URL Shortener API 🌐</h2>
@@ -37,12 +51,16 @@ app.get("/", (req, res) => {
   `);
 });
 
-// Health-check
+// -------------------------
+// ❤️ HEALTH CHECK
+// -------------------------
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "Server and MongoDB are running ✅" });
 });
 
-// POST /api/shorten -> create short url
+// -------------------------
+// ✂️ SHORTEN URL
+// -------------------------
 app.post("/api/shorten", async (req, res) => {
   try {
     const { longUrl } = req.body;
@@ -70,7 +88,9 @@ app.post("/api/shorten", async (req, res) => {
   }
 });
 
-// Redirect route: GET /:shortCode
+// -------------------------
+// 🔄 REDIRECT
+// -------------------------
 app.get("/:shortCode", async (req, res) => {
   try {
     const url = await Url.findOne({ shortCode: req.params.shortCode });
@@ -89,7 +109,9 @@ app.get("/:shortCode", async (req, res) => {
   }
 });
 
-// Local server (only when not production) with port fallback
+// -------------------------
+// 🚀 START LOCAL SERVER (NOT IN PRODUCTION)
+// -------------------------
 if (process.env.NODE_ENV !== "production") {
   const DEFAULT_PORT = process.env.PORT || 3000;
   const server = app.listen(DEFAULT_PORT, () => {
